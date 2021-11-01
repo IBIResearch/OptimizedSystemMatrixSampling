@@ -1,0 +1,5 @@
+[deps]
+JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
+MPIReco = "e4246700-6248-511e-8146-a1d1f47669d2"
+PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
+SensorSelection = "b8667a71-b620-55ac-9a33-4c5abb5ea869"
