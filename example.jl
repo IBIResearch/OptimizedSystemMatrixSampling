@@ -5,12 +5,12 @@ using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
 
-using MPIReco, JLD, PyPlot
+using MPIReco, JLD, PyPlot, LazyArtifacts
 
 ###############
 # download data
 ###############
-datadir = "./sm" #artifact"data"
+datadir = artifact"MDFStore"
 store = MDFDatasetStore(datadir)
 
 #####################

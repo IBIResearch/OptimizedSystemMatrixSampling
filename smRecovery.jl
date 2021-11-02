@@ -4,7 +4,8 @@ using MPIReco, JLD, PyPlot
 # load system matrix
 ####################
 # Dataset store handling
-# datadir = "./sm"
+# uncomment the next two lines if running this script separately
+# datadir = artifact"MDFStore"
 # store = MDFDatasetStore(datadir)
 
 # system matrix
@@ -24,9 +25,10 @@ S2 = S2[:,:,snr_idx2]
 rf = 6
 numSamp = div(nx*ny,6)
 #poisson disk
-idx_pd = load("./samplingPatterns/pd_r$(rf).jld","idx")[1:numSamp]
-# optimized patterns
-idx_opt= load("./samplingPatterns/samplingIdxOpt.jld","idx")[1:numSamp]
+idx_pd = load(datadir*"/samplingPatterns/pd_r$(rf).jld","idx")[1:numSamp]
+# optimized patterns 
+# uncomment the next line if running this script without smSampling.jl
+# idx_opt= load(datadir*"/samplingPatterns/samplingIdxOpt.jld","idx")[1:numSamp]
 
 # perform undersampling
 y_pd = zeros(ComplexF64, length(idx_pd),size(S2,3))
@@ -40,20 +42,20 @@ end
 # SMRecovery
 ############
 params = Dict{Symbol,Any}()
-params[:shape] = (nx,ny)
-params[:reg1] = "L1"
-params[:sparseTrafo] = DCTOp(ComplexF64,(nx,ny),2)
+params[:shape] = (nx,ny)      # size of reconstruction grid
+params[:reg1] = "L1"          # type of regularization: L1
+params[:sparseTrafo] = DCTOp(ComplexF64,(nx,ny),2)  # sparsifying transform 
 params[:ρ_l1] = 0.3
-params[:reg2] = "Nothing"
-params[:iterationsInner] = 50
-params[:iterations] = 10
-params[:relTol] = 1.e-3
-params[:absTol] = 1.e-4
+# params[:reg2] = "Nothing"
+params[:iterationsInner] = 50 # maximu number of inner Split-Bregman iterations
+params[:iterations] = 10      # number of outer split Bregman iterations
+params[:relTol] = 1.e-3       # relative stopping tolerance for inner Split Bregman iteration 
+params[:absTol] = 1.e-4       # absolute stopping tolerance for inner Split Bregman iteration
 
-params[:λ_l1] = 0.4^6
+params[:λ_l1] = 0.4^6         # ℓ1-regularization parameter
 S2_pd = reshape( smRecovery(y_pd,idx_pd,params), nx, ny, :)
 
-params[:λ_l1] = 0.4^5
+params[:λ_l1] = 0.4^5         # ℓ1-regularization parameter
 S2_opt = reshape( smRecovery(y_opt,idx_opt,params), nx, ny, :)
 
 ################################

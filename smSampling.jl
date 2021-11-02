@@ -14,7 +14,8 @@ end
 # load system matrix
 ####################
 # Dataset store handling
-# datadir = "./sm"
+# uncomment the next two lines if running this script separately
+# datadir = artifact"MDFStore"
 # store = MDFDatasetStore(datadir)
 
 # system matrix
@@ -35,7 +36,7 @@ end
 
 # chose frequency components for training
 Random.seed!(1234)
-p = shuffle(collect(4:2:size(S1,3))) # random choise
+p = shuffle(collect(4:2:size(S1,3)))
 St = S1[:,:,p[1:30]]  # training data
 
 ########################################################
@@ -61,7 +62,7 @@ for k=1:size(St,3)
 end
 
 # obtain sparse measurement matrix
-thresh = 1.e-1 #5.e-2
+thresh = 1.e-1  # portion of the total number of sparse coefficients to use for optimization 
 numCoeff = floor(Int64,thresh*nx*ny)
 Ht_sub = zeros(numCoeff,size(Ht,2),size(St,3))
 for k=1:size(St,3)
@@ -80,27 +81,23 @@ end
 ######################
 # Forward optimization
 ######################
-rfac=1.0
-λ=3.0 
-numSamples = floor(Int64, nx*ny/rfac)
-w = zeros(Bool,nx*ny)
+λ=3.0                             # proportionality factor for the prior covariance matrices
+numSamples = floor(Int64, nx*ny)  # number of samples to add to the sampling pattern
+w = zeros(Bool,nx*ny)             # initial sampling pattern (empty)
 m = SensorSelection.Experiment(Ht_sub, r, Ht_sub, λ.*st_amp.^2,w)
-@time wlog = optSamplingFW!(m,numSamples,4,180)
-
-# save result
-save("./samplingPatterns/samplingIdxOpt.jld", "idx", wlog)
+@time idx_opt = optSamplingFW!(m,numSamples,4,180)
 
 #############################
 # plot some sampling patterns
 #############################
 # precomputed Poisson disk patterns
-msk2_pd = zeros(nx,ny); msk2_pd[load("./samplingPatterns/pd_r2.jld","idx")] .= 1
-msk6_pd = zeros(nx,ny); msk6_pd[load("./samplingPatterns/pd_r6.jld","idx")] .= 1
-msk10_pd = zeros(nx,ny); msk10_pd[load("./samplingPatterns/pd_r10.jld","idx")] .= 1
+msk2_pd = zeros(nx,ny); msk2_pd[load(datadir*"/samplingPatterns/pd_r2.jld","idx")] .= 1
+msk6_pd = zeros(nx,ny); msk6_pd[load(datadir*"/samplingPatterns/pd_r6.jld","idx")] .= 1
+msk10_pd = zeros(nx,ny); msk10_pd[load(datadir*"/samplingPatterns/pd_r10.jld","idx")] .= 1
 # optimized patterns
-msk2_opt = zeros(nx,ny); msk2_opt[wlog[1:div(nx*ny,2)]] .= 1
-msk6_opt = zeros(nx,ny); msk6_opt[wlog[1:div(nx*ny,6)]] .= 1
-msk10_opt = zeros(nx,ny); msk10_opt[wlog[1:div(nx*ny,10)]] .= 1
+msk2_opt = zeros(nx,ny); msk2_opt[idx_opt[1:div(nx*ny,2)]] .= 1
+msk6_opt = zeros(nx,ny); msk6_opt[idx_opt[1:div(nx*ny,6)]] .= 1
+msk10_opt = zeros(nx,ny); msk10_opt[idx_opt[1:div(nx*ny,10)]] .= 1
 
 figure("sampling Patterns", figsize=(8,6))
 subplot(2,3,1); imshow(msk2_pd); title("r=2"); ylabel("PD"); xticks([]); yticks([])
